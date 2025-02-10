@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Approve Blogs{% endblock %}
+
+{% block body %}
+    <h1>Pending Blogs</h1>
+
+    {% if blogs is empty %}
+        <p>No pending blogs.</p>
+    {% else %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Content</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for blog in blogs %}
+                    <tr>
+                        <td>{{ blog.id }}</td>
+                        <td>{{ blog.title }}</td>
+                        <td>{{ blog.content|slice(0, 100) ~ '...' }}</td>
+                        <td>
+                            <a href="{{ path('accept_blog', {id: blog.id}) }}" class="btn btn-success">Accept</a>
+                            <a href="{{ path('reject_blog', {id: blog.id}) }}" class="btn btn-danger">Reject</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
