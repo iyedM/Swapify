@@ -75,23 +75,25 @@ final class CommentaireController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_commentaire_delete', methods: ['POST'])]
-    public function delete(Request $request, Commentaire $commentaire, EntityManagerInterface $entityManager): Response
-    {
-        // Ensure only the comment owner or an admin can delete the comment
-        $isCommentOwner = $commentaire->getUser() === $this->getUser();
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
+public function delete(Request $request, Commentaire $commentaire, EntityManagerInterface $entityManager): Response
+{
+    // Ensure only the comment owner or an admin can delete the comment
+    $isCommentOwner = $commentaire->getUser() === $this->getUser();
+    $isAdmin = $this->isGranted('ROLE_ADMIN');
     
-        if (!$isCommentOwner && !$isAdmin) {
-            throw $this->createAccessDeniedException('You are not allowed to delete this comment.');
-        }
-    
-        // Validate CSRF token
-        if ($this->isCsrfTokenValid('delete'.$commentaire->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($commentaire);
-            $entityManager->flush();
-        }
-    
-        // Redirect to the blog's detail page after deletion
-        return $this->redirectToRoute('app_blog_index', ['id' => $commentaire->getBlog()->getId()], Response::HTTP_SEE_OTHER);
+    // Allow an admin to delete any comment, and the owner can delete their own comment
+    if (!$isCommentOwner && !$isAdmin) {
+        throw $this->createAccessDeniedException('You are not allowed to delete this comment.');
     }
+
+    // Validate CSRF token
+    if ($this->isCsrfTokenValid('delete' . $commentaire->getId(), $request->get('_token'))) {
+        $entityManager->remove($commentaire);
+        $entityManager->flush();
+    }
+
+    // Redirect to the blog's detail page after deletion
+    return $this->redirectToRoute('app_blog_show', ['id' => $commentaire->getBlog()->getId()], Response::HTTP_SEE_OTHER);
+}
+
 }

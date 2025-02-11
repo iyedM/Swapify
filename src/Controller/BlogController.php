@@ -243,21 +243,22 @@ public function approve(EntityManagerInterface $entityManager): Response
 #[Route('/my-blogs', name: 'app_blog_my_blogs', methods: ['GET'])]
 public function myBlogs(EntityManagerInterface $entityManager): Response
 {
-    $this->denyAccessUnlessGranted('ROLE_USER');
+    $this->denyAccessUnlessGranted('ROLE_USER'); // Ensure the user is logged in
 
-    $user = $this->getUser();
+    $user = $this->getUser(); // Get the currently logged-in user
 
+    // Query for the blogs associated with the logged-in user, with any status
     $blogs = $entityManager->getRepository(Blog::class)
         ->createQueryBuilder('b')
-        ->where('b.user = :user')
-        ->andWhere('b.statut = :statut')
+        ->where('b.user = :user') // Filter by the logged-in user
+        ->andWhere('b.statut IN (:statuts)') // Filter by multiple status types
         ->setParameter('user', $user)
-        ->setParameter('statut', EtatEnum::Acceptée)
+        ->setParameter('statuts', [EtatEnum::Acceptée, EtatEnum::enAttente, EtatEnum::Rejetée])
         ->getQuery()
         ->getResult();
 
     return $this->render('blog/myblogs.html.twig', [
-        'blogs' => $blogs,
+        'blogs' => $blogs, // Pass the filtered blogs to the Twig view
     ]);
 }
 
