@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/blog')]
 final class BlogController extends AbstractController
@@ -34,41 +34,47 @@ final class BlogController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
-    
+        
         $blog = new Blog();
         $blog->setUser($this->getUser());
-    
+        
+        // If the logged-in user is an admin, set the blog's status to accepted right away
+        if (in_array('ROLE_ADMIN', $this->getUser()->getRoles())) {
+            $blog->setStatut(EtatEnum::Acceptée); // Automatically set the status to "accepted"
+        }
+        
         $form = $this->createForm(BlogType::class, $blog);
         $form->handleRequest($request);
-    
+        
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $imageFile */
             $imageFile = $form->get('imageFile')->getData();
-    
+        
             if ($imageFile) {
                 $newFilename = uniqid().'.'.$imageFile->guessExtension();
-    
+        
                 // Move the file to the directory where images are stored
                 $imageFile->move(
                     $this->getParameter('images_directory'),
                     $newFilename
                 );
-    
+        
                 // Update the 'image' property to store the file name
                 $blog->setImage($newFilename);
             }
-    
+        
             $entityManager->persist($blog);
             $entityManager->flush();
-    
+        
             return $this->redirectToRoute('app_blog_index', [], Response::HTTP_SEE_OTHER);
         }
-    
+        
         return $this->render('blog/new.html.twig', [
             'blog' => $blog,
             'form' => $form,
         ]);
     }
+    
 
     #[Route('/{id}', name: 'app_blog_show', methods: ['GET'])]
     public function show(Blog $blog): Response
@@ -81,25 +87,40 @@ final class BlogController extends AbstractController
     #[Route('/{id}/edit', name: 'app_blog_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Blog $blog, EntityManagerInterface $entityManager): Response
     {
-        // Ensure only the blog owner can access the edit page
-        if ($blog->getUser() !== $this->getUser()) {
-            throw $this->createAccessDeniedException('You are not allowed to edit this blog.');
+        // Ensure the user is either the blog owner or an admin
+        $this->denyAccessUnlessGranted('ROLE_USER');  // Basic check for regular users
+    
+        // If the user is an admin, automatically accept the blog
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $blog->setStatut(EtatEnum::Acceptée);  // Admin automatically accepts the blog
+        } else {
+            // Ensure only the blog owner can access the edit page
+            if ($blog->getUser() !== $this->getUser()) {
+                throw $this->createAccessDeniedException('You are not allowed to edit this blog.');
+            }
+            
+            // Set the blog status to 'enAttente' when it is edited by a regular user
+            $blog->setStatut(EtatEnum::enAttente);  // Set status to "pending" for approval by admin
         }
     
         $form = $this->createForm(BlogType::class, $blog);
         $form->handleRequest($request);
-    
+        
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
-    
-            return $this->redirectToRoute('app_blog_index', [], Response::HTTP_SEE_OTHER);
+        
+            // Redirect to the index page or any other page you wish after updating
+            $this->addFlash('success', 'Blog updated successfully!');
+            return $this->redirectToRoute('app_blog_index');
         }
-    
+        
         return $this->render('blog/edit.html.twig', [
             'blog' => $blog,
             'form' => $form,
         ]);
     }
+    
+
 
     #[Route('/{id}', name: 'app_blog_delete', methods: ['POST'])]
     public function delete(Request $request, Blog $blog, EntityManagerInterface $entityManager): Response
@@ -123,7 +144,18 @@ final class BlogController extends AbstractController
         return $this->redirectToRoute('app_blog_index', [], Response::HTTP_SEE_OTHER);
     }
     
+    #[Route('/admin/pending-blogs', name: 'admin_pending_blogs')]
+    public function showPendingBlogs(BlogRepository $blogRepository)
+    {
+        // Find all blogs with the status "enAttente"
+        $blogs = $blogRepository->findBy(['statut' => EtatEnum::enAttente]);
+
+        return $this->render('admin/pending_blogs.html.twig', [
+            'blogs' => $blogs,
+        ]);
+    }
     #[Route('/accept/{id}', name: 'accept_blog', methods: ['GET'])]
+
     public function acceptBlog(int $id, EntityManagerInterface $entityManager): RedirectResponse
     {
         // Find the blog by its ID

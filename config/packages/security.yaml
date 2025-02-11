@@ -6,7 +6,7 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
-                property: email  # Assurez-vous que c'est bien "email" et non "username"
+                property: email  # Make sure this is based on email, not username
 
     firewalls:
         dev:
@@ -31,9 +31,15 @@ security:
                 secret: '%kernel.secret%'
                 lifetime: 604800
                 path: /
-                # by default, the feature is enabled by checking a checkbox in the
-                # login form, uncomment the following line to always enable it.
-                #always_remember_me: true
+
+    # Move access_control outside of the firewalls block
+    access_control:
+        # Ensure only users with ROLE_ADMIN can access /admin routes
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/blog/admin/pending-blogs, roles: ROLE_ADMIN }
+        # General access control for accepting and refusing blogs
+        - { path: ^/accept, roles: ROLE_ADMIN }
+        - { path: ^/refuse, roles: ROLE_ADMIN }
 
 when@test:
     security:
