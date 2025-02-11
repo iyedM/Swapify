@@ -23,8 +23,9 @@
         {% for blog in blogs %}
             <div class="col-md-4 mb-4">
                 <div class="card shadow-lg">
-                    <img src="https://via.placeholder.com/400x200" class="card-img-top" alt="Blog Image">
-                    <div class="card-body">
+                    {% if blog.image %}
+                    <img src="{{ asset('uploads/images/' ~ blog.image) }}" alt="{{ blog.Titre }}" class="img-fluid">
+                {% endif %}                    <div class="card-body">
                         <h5 class="card-title text-primary">{{ blog.titre }}</h5>
                         <p class="card-text text-muted">{{ blog.contenu|slice(0, 100) ~ '...' }}</p>
                         <p class="mb-2">

@@ -45,6 +45,9 @@ class Blog
     #[ORM\ManyToOne(inversedBy: 'blogs')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
     
 
     public function __construct()
@@ -155,5 +158,18 @@ class Blog
         return $this;
     }
 
+
+
+public function getImage(): ?string
+{
+    return $this->image;
+}
+
+public function setImage(?string $image): static
+{
+    $this->image = $image;
+
+    return $this;
+}
 
 }

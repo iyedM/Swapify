@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
 
 #[Route('/blog')]
 final class BlogController extends AbstractController
@@ -25,26 +27,40 @@ final class BlogController extends AbstractController
             'blogs' => $acceptedBlogs,
         ]);
     }
-
     #[Route('/new', name: 'app_blog_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_USER');
-
+    
         $blog = new Blog();
-
-        $blog->setUser($this->getUser()); // Set the current user as the blog author
-
+        $blog->setUser($this->getUser());
+    
         $form = $this->createForm(BlogType::class, $blog);
         $form->handleRequest($request);
-
+    
         if ($form->isSubmitted() && $form->isValid()) {
+            /** @var UploadedFile $imageFile */
+            $imageFile = $form->get('imageFile')->getData();
+    
+            if ($imageFile) {
+                $newFilename = uniqid().'.'.$imageFile->guessExtension();
+    
+                // Move the file to the directory where images are stored
+                $imageFile->move(
+                    $this->getParameter('images_directory'),
+                    $newFilename
+                );
+    
+                // Update the 'image' property to store the file name
+                $blog->setImage($newFilename);
+            }
+    
             $entityManager->persist($blog);
             $entityManager->flush();
-
+    
             return $this->redirectToRoute('app_blog_index', [], Response::HTTP_SEE_OTHER);
         }
-
+    
         return $this->render('blog/new.html.twig', [
             'blog' => $blog,
             'form' => $form,
@@ -192,14 +208,22 @@ public function approve(EntityManagerInterface $entityManager): Response
 #[Route('/my-blogs', name: 'app_blog_my_blogs', methods: ['GET'])]
 public function myBlogs(EntityManagerInterface $entityManager): Response
 {
-    // Ensure the user is logged in
     $this->denyAccessUnlessGranted('ROLE_USER');
 
-    // Fetch all blogs posted by the current user
-    $userBlogs = $entityManager->getRepository(Blog::class)->findBy(['user' => $this->getUser()]);
+    $user = $this->getUser();
 
-    return $this->render('blog/my_blogs.html.twig', [
-        'blogs' => $userBlogs,
+    $blogs = $entityManager->getRepository(Blog::class)
+        ->createQueryBuilder('b')
+        ->where('b.user = :user')
+        ->andWhere('b.statut = :statut')
+        ->setParameter('user', $user)
+        ->setParameter('statut', EtatEnum::Acceptée)
+        ->getQuery()
+        ->getResult();
+
+    return $this->render('blog/myblogs.html.twig', [
+        'blogs' => $blogs,
     ]);
 }
+
 }
