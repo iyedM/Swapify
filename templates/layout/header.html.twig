@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mon Site{% endblock %}</title>
+    <link rel="stylesheet" href="{{ asset('styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <nav>
+            <ul>
+                <li class="logo">SWAPIFY</li>
+{% if app.user %}
+                    {% endif %}
+                <li><a href="{{ path('app_blog_index') }}">Blog</a></li>
+                {% if app.user %}
+                      <li ><a href="{{ path('app_blog_my_blogs') }}">mes blogs </a></li>
+                      <li><a href="{{ path('app_blog_new') }}">Créer Blog</a></li>
+
+                    <li><a href="{{ path('app_logout') }}">Se déconnecter</a></li>
+                    <li class="welcome-message">Bienvenue, {{ app.user.email }} </li>
+
+                {% else %}
+                    <li><a href="{{ path('app_login') }}">Se connecter</a></li>
+                    <li><a href="{{ path('app_register') }}">S'inscrire</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block body %}{% endblock %}
+    </main>
+
+</body>
+</html>
+
+<style>
+    /* Header Styling */
+    header {
+        background: linear-gradient(90deg, #2e8b57, #3cb371); /* Light green gradient */
+        padding: 15px 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    nav ul {
+        list-style: none;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 20px;
+        padding: 0 20px;
+        margin: 0;
+    }
+
+    nav ul li {
+        display: inline;
+        color: white;
+        font-size: 1rem;
+    }
+
+    nav ul li.logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-right: auto; /* Push logo to the left */
+    }
+    </style>

@@ -19,8 +19,10 @@ class Commentaire
     #[ORM\ManyToOne(inversedBy: 'listeCommentaires')]
     private ?Blog $blog = null;
 
-    #[ORM\ManyToOne(inversedBy: 'listeCommentaires')]
-    private ?AcceptedBlog $accBlog = null;
+
+    #[ORM\ManyToOne(inversedBy: 'commentaires')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $user ;
 
 
 
@@ -53,14 +55,16 @@ class Commentaire
         return $this;
     }
 
-    public function getAccBlog(): ?AcceptedBlog
+
+
+    public function getUser(): ?User
     {
-        return $this->accBlog;
+        return $this->user;
     }
 
-    public function setAccBlog(?AcceptedBlog $accBlog): static
+    public function setUser(?User $user): static
     {
-        $this->accBlog = $accBlog;
+        $this->user = $user;
 
         return $this;
     }

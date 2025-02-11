@@ -29,7 +29,12 @@ final class BlogController extends AbstractController
     #[Route('/new', name: 'app_blog_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
         $blog = new Blog();
+
+        $blog->setUser($this->getUser()); // Set the current user as the blog author
+
         $form = $this->createForm(BlogType::class, $blog);
         $form->handleRequest($request);
 
@@ -57,15 +62,20 @@ final class BlogController extends AbstractController
     #[Route('/{id}/edit', name: 'app_blog_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Blog $blog, EntityManagerInterface $entityManager): Response
     {
+        // Ensure only the blog owner can access the edit page
+        if ($blog->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('You are not allowed to edit this blog.');
+        }
+    
         $form = $this->createForm(BlogType::class, $blog);
         $form->handleRequest($request);
-
+    
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
-
+    
             return $this->redirectToRoute('app_blog_index', [], Response::HTTP_SEE_OTHER);
         }
-
+    
         return $this->render('blog/edit.html.twig', [
             'blog' => $blog,
             'form' => $form,
@@ -75,13 +85,25 @@ final class BlogController extends AbstractController
     #[Route('/{id}', name: 'app_blog_delete', methods: ['POST'])]
     public function delete(Request $request, Blog $blog, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$blog->getId(), $request->getPayload()->getString('_token'))) {
+        // Ensure only the blog owner can delete the blog
+        if ($blog->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('You are not allowed to delete this blog.');
+        }
+    
+        if ($this->isCsrfTokenValid('delete' . $blog->getId(), $request->getPayload()->getString('_token'))) {
+            // Remove related comments first
+            foreach ($blog->getListeCommentaires() as $comment) {
+                $entityManager->remove($comment);
+            }
+    
+            // Remove the blog
             $entityManager->remove($blog);
             $entityManager->flush();
         }
-
+    
         return $this->redirectToRoute('app_blog_index', [], Response::HTTP_SEE_OTHER);
     }
+    
     #[Route('/accept/{id}', name: 'accept_blog', methods: ['GET'])]
     public function acceptBlog(int $id, EntityManagerInterface $entityManager): RedirectResponse
     {
@@ -167,4 +189,17 @@ public function approve(EntityManagerInterface $entityManager): Response
     ]);
 }
     
+#[Route('/my-blogs', name: 'app_blog_my_blogs', methods: ['GET'])]
+public function myBlogs(EntityManagerInterface $entityManager): Response
+{
+    // Ensure the user is logged in
+    $this->denyAccessUnlessGranted('ROLE_USER');
+
+    // Fetch all blogs posted by the current user
+    $userBlogs = $entityManager->getRepository(Blog::class)->findBy(['user' => $this->getUser()]);
+
+    return $this->render('blog/my_blogs.html.twig', [
+        'blogs' => $userBlogs,
+    ]);
+}
 }

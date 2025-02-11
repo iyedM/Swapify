@@ -1,0 +1,64 @@
+{% extends 'layout/header.html.twig' %}
+
+{% block title %}My Blogs{% endblock %}
+
+{% block body %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">My Blogs</h1>
+
+        {# Flash messages #}
+        {% for label, messages in app.flashes %}
+            <div class="alert alert-{{ label }} text-center">
+                {% for message in messages %}
+                    <p class="mb-0">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        {# Display All Blogs Posted by the User #}
+        <div class="row">
+            {% for blog in blogs %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-lg">
+                        <img src="https://via.placeholder.com/400x200" class="card-img-top" alt="Blog Image">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ blog.titre }}</h5>
+                            <p class="card-text text-muted">{{ blog.contenu|slice(0, 100) ~ '...' }}</p>
+                            <p class="mb-2">
+                                <strong>Status:</strong>
+                                <span class="badge bg-{{ blog.statut.value == 'enAttente' ? 'warning' : (blog.statut.value == 'Acceptée' ? 'success' : 'danger') }}">
+                                    {{ blog.statut.value }}
+                                </span>
+                            </p>
+
+                            <a href="{{ path('app_blog_show', {'id': blog.id}) }}" class="btn btn-primary btn-sm">Read More</a>
+
+                            {# Edit and Delete Buttons (only visible to the blog owner) #}
+                            {% if blog.user == app.user %}
+                                <div class="mt-2">
+                                    <a href="{{ path('app_blog_edit', {'id': blog.id}) }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <form method="POST" action="{{ path('app_blog_delete', {'id': blog.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ blog.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this blog?');">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <p class="text-center text-muted">You have not posted any blogs yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

@@ -41,6 +41,10 @@ class Blog
 
     #[ORM\Column(length: 255, enumType: EtatEnum::class, options: ["default" => "enAttente"])]
     private EtatEnum $statut = EtatEnum::enAttente;
+
+    #[ORM\ManyToOne(inversedBy: 'blogs')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $user;
     
 
     public function __construct()
@@ -135,6 +139,18 @@ class Blog
     public function setStatut(EtatEnum $statut): self
     {
         $this->statut = $statut;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
 
         return $this;
     }

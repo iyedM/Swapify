@@ -100,26 +100,5 @@ class AcceptedBlog
         return $this->listeCommentaires;
     }
 
-    public function addListeCommentaire(Commentaire $listeCommentaire): static
-    {
-        if (!$this->listeCommentaires->contains($listeCommentaire)) {
-            $this->listeCommentaires->add($listeCommentaire);
-            $listeCommentaire->setAccBlog($this);
-        }
-
-        return $this;
-    }
-
-    public function removeListeCommentaire(Commentaire $listeCommentaire): static
-    {
-        if ($this->listeCommentaires->removeElement($listeCommentaire)) {
-            // set the owning side to null (unless already changed)
-            if ($listeCommentaire->getAccBlog() === $this) {
-                $listeCommentaire->setAccBlog(null);
-            }
-        }
-
-        return $this;
-    }
 
 }
