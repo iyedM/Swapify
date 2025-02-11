@@ -21,7 +21,10 @@ final class BlogController extends AbstractController
     #[Route('/blogs', name: 'app_blog_index', methods: ['GET'])]
     public function index(EntityManagerInterface $entityManager): Response
     {
-        $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(['statut' => EtatEnum::Acceptée]);
+        $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+            ['statut' => EtatEnum::Acceptée],
+            ['id' => 'DESC'] // Order by id in descending order
+        );
     
         return $this->render('blog/index.html.twig', [
             'blogs' => $acceptedBlogs,
