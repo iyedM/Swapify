@@ -84,6 +84,10 @@ class Blog
         return $this;
     }
 
+    public function getRateCount(): int
+    {
+        return $this->rateCount;
+    }
     public function getRate(): float
     {
         return $this->rateCount > 0 ? $this->rate / $this->rateCount : 0;

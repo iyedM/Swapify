@@ -64,12 +64,43 @@
                                 </div>
                             </form>
                         
-                            {# Display Average Rating #}
+                            {# Display Average Rating with Stars #}
                             <div class="mt-3">
                                 <strong>Average Rating:</strong>
-                                {{ blog.getRate()|number_format(1) }} ★
+                                {% if blog.getRate() > 0.0 %}
+                                    <div class="rating">
+                                        {# Calculate the number of full, half, and empty stars based on the average rating #}
+                                        {% set fullStars = blog.getRate()|round(0, 'floor') %}
+                                        {% set fractionalPart = blog.getRate() % 1 %}
+                                        {% set halfStar = fractionalPart >= 0.25 and fractionalPart < 0.75 ? 1 : 0 %}
+                                        {% set emptyStars = 5 - fullStars - halfStar %}
+                        
+                                        {# Display full stars (★) #}
+                                        {% for i in 0..fullStars - 1 %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% endfor %}
+                        
+                                        {# Display half star (½) only if the rating is not 5.0 #}
+                                        {% if halfStar == 1 and fullStars < 5 %}
+                                            <i class="fas fa-star-half-alt text-warning"></i>
+                                        {% endif %}
+                        
+                                        {# Display empty stars (☆) only if it's not a perfect 5/5 #}
+                                        {% if fullStars < 5 %}
+                                            {% for i in 0..emptyStars - 1 %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endfor %}
+                                        {% endif %}
+                                        
+                                        {# Display numeric average rating #}
+                                        <span>{{ blog.getRate()|number_format(1) }} ★</span>
+                                    </div>
+                                {% else %}
+                                    No ratings yet.
+                                {% endif %}
                             </div>
                         </div>
+                        
                         
 
                         {# Comment Section #}
