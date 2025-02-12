@@ -31,6 +31,17 @@ final class BlogController extends AbstractController
             'blogs' => $acceptedBlogs,
         ]);
     }
+    #[Route('/all', name: 'app_blog_all', methods: ['GET'])]
+    public function display(EntityManagerInterface $entityManager): Response
+    {
+        $acceptedBlogs = $entityManager->getRepository(Blog::class)->findAll(
+        );
+        
+    
+        return $this->render('blog/all_blogs.html.twig', [
+            'blogs' => $acceptedBlogs,
+        ]);
+    }
     
     #[Route('/new', name: 'app_blog_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
@@ -231,17 +242,6 @@ public function rateBlog(Request $request, Blog $blog, EntityManagerInterface $e
     return $this->redirectToRoute('app_blog_index');
 }
 
-//to complete this together with the average rating
-#[Route('/approve', name: 'app_blog_approve', methods: ['GET'])]
-public function approve(EntityManagerInterface $entityManager): Response
-{
-    $pendingBlogs = $entityManager->getRepository(Blog::class)->findBy(['statut' => EtatEnum::enAttente]);
-
-    return $this->render('blog/approve.html.twig', [
-        'blogs' => $pendingBlogs,
-    ]);
-}
-    
 #[Route('/my-blogs', name: 'app_blog_my_blogs', methods: ['GET'])]
 public function myBlogs(EntityManagerInterface $entityManager): Response
 {
@@ -265,47 +265,33 @@ public function myBlogs(EntityManagerInterface $entityManager): Response
 }
 
 // In BlogController.php
-
-#[Route('/all-blogs', name: 'app_blog_all')]
-public function showAllBlogs(BlogRepository $blogRepository, EntityManagerInterface $entityManager): Response
+#[Route('/stats', name: 'app_blog_stats', methods: ['GET'])]
+public function blogStats(EntityManagerInterface $entityManager): Response
 {
-    $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(
-        ['statut' => EtatEnum::Acceptée],
-        ['id' => 'DESC'] // Order by id in descending order
-    );
+    // Get the total number of blogs
+    $totalBlogs = $entityManager->getRepository(Blog::class)->count([]);
 
-    return $this->render('blog/all_blogs.html.twig', [
-        'blogs' => $acceptedBlogs,
+    // Get the total number of comments
+    $totalComments = $entityManager->createQueryBuilder()
+        ->select('COUNT(c.id)')
+        ->from('App\Entity\Commentaire', 'c')
+        ->getQuery()
+        ->getSingleScalarResult();
+
+    // Get the total number of rates
+    $totalRates = $entityManager->createQueryBuilder()
+        ->select('SUM(b.totalRates)') // Assuming 'totalRates' stores the sum of ratings
+        ->from('App\Entity\Blog', 'b')
+        ->getQuery()
+        ->getSingleScalarResult() ?? 0;
+
+    return $this->render('blog/stats.html.twig', [
+        'totalBlogs' => $totalBlogs,
+        'totalComments' => $totalComments,
+        'totalRates' => $totalRates,
     ]);
 }
-// #[Route('/all-blogs', name: 'app_blog_all')]
-// public function showAllBlogs(BlogRepository $blogRepository, EntityManagerInterface $entityManager): Response
-// {
-//         $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(
-//             ['statut' => EtatEnum::Acceptée],
-//             ['id' => 'DESC'] // Order by id in descending order
-//         );
-        
-//         $rejectedBlogs = $entityManager->getRepository(Blog::class)->findBy(
-//             ['statut' => EtatEnum::Rejetée],
-//             ['id' => 'DESC'] // Order by id in descending order
-//         );
 
-//         $pendingBlogs = $entityManager->getRepository(Blog::class)->findBy(
-//             ['statut' => EtatEnum::enAttente],
-//             ['id' => 'DESC'] // Order by id in descending order
-//         );
-
-
-//         return $this->render('blog/index.html.twig', [
-//             'blogs' => $acceptedBlogs,
-//         ]);
-    
-//     // Fetch all blogs, including pending, accepted, and rejected
-//     return $this->render('blog/all_blogs.html.twig', [
-//         'blogs' => $blogs,
-//     ]);
-// }
 }
 
 

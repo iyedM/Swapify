@@ -37,6 +37,7 @@ security:
         # Ensure only users with ROLE_ADMIN can access /admin routes
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/blog/admin/pending-blogs, roles: ROLE_ADMIN }
+        - { path: ^/blog/admin/blogss, roles: ROLE_ADMIN }
         # General access control for accepting and refusing blogs
         - { path: ^/accept, roles: ROLE_ADMIN }
         - { path: ^/refuse, roles: ROLE_ADMIN }

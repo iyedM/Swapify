@@ -17,10 +17,12 @@
                     <li><a href="{{ path('app_blog_index') }}">Blog</a></li>
                     <li><a href="{{ path('app_blog_all') }}">Mes Blogs</a></li>
                     <li><a href="{{ path('app_blog_new') }}">Créer Blog</a></li>
-
+                    
                     {# Show this link only for admin users #}
                     {% if 'ROLE_ADMIN' in app.user.roles %}
                         <li><a href="{{ path('admin_pending_blogs') }}">Voir les Blogs en Attente</a></li>
+                        <li><a href="{{ path('app_blog_all') }}">Voir Tous les Blogs</a></li>
+
                     {% endif %}
 
                     <li><a href="{{ path('app_logout') }}">Se déconnecter</a></li>
