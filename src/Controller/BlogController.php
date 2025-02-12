@@ -25,11 +25,13 @@ final class BlogController extends AbstractController
             ['statut' => EtatEnum::Acceptée],
             ['id' => 'DESC'] // Order by id in descending order
         );
+        
     
         return $this->render('blog/index.html.twig', [
             'blogs' => $acceptedBlogs,
         ]);
     }
+    
     #[Route('/new', name: 'app_blog_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -262,4 +264,48 @@ public function myBlogs(EntityManagerInterface $entityManager): Response
     ]);
 }
 
+// In BlogController.php
+
+#[Route('/all-blogs', name: 'app_blog_all')]
+public function showAllBlogs(BlogRepository $blogRepository, EntityManagerInterface $entityManager): Response
+{
+    $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+        ['statut' => EtatEnum::Acceptée],
+        ['id' => 'DESC'] // Order by id in descending order
+    );
+
+    return $this->render('blog/all_blogs.html.twig', [
+        'blogs' => $acceptedBlogs,
+    ]);
 }
+// #[Route('/all-blogs', name: 'app_blog_all')]
+// public function showAllBlogs(BlogRepository $blogRepository, EntityManagerInterface $entityManager): Response
+// {
+//         $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+//             ['statut' => EtatEnum::Acceptée],
+//             ['id' => 'DESC'] // Order by id in descending order
+//         );
+        
+//         $rejectedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+//             ['statut' => EtatEnum::Rejetée],
+//             ['id' => 'DESC'] // Order by id in descending order
+//         );
+
+//         $pendingBlogs = $entityManager->getRepository(Blog::class)->findBy(
+//             ['statut' => EtatEnum::enAttente],
+//             ['id' => 'DESC'] // Order by id in descending order
+//         );
+
+
+//         return $this->render('blog/index.html.twig', [
+//             'blogs' => $acceptedBlogs,
+//         ]);
+    
+//     // Fetch all blogs, including pending, accepted, and rejected
+//     return $this->render('blog/all_blogs.html.twig', [
+//         'blogs' => $blogs,
+//     ]);
+// }
+}
+
+
