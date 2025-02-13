@@ -6,10 +6,11 @@
     <title>{% block title %}Mon Site{% endblock %}</title>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <header>
+    <header id="header">
         <nav>
             <ul>
                 <li class="logo">SWAPIFY</li>
@@ -22,7 +23,6 @@
                     {% if 'ROLE_ADMIN' in app.user.roles %}
                         <li><a href="{{ path('admin_pending_blogs') }}">Voir les Blogs en Attente</a></li>
                         <li><a href="{{ path('app_blog_all') }}">Voir Tous les Blogs</a></li>
-
                     {% endif %}
 
                     <li><a href="{{ path('app_logout') }}">Se déconnecter</a></li>
@@ -39,15 +39,60 @@
         {% block body %}{% endblock %}
     </main>
 
+    <script>
+        // JavaScript to handle header visibility on scroll
+        let lastScroll = 0;
+        const header = document.getElementById('header');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll <= 0) {
+                // At the top of the page, always show the header
+                header.classList.remove('hidden');
+                return;
+            }
+
+            if (currentScroll > lastScroll && !header.classList.contains('hidden')) {
+                // Scrolling down, hide the header
+                header.classList.add('hidden');
+            } else if (currentScroll < lastScroll && header.classList.contains('hidden')) {
+                // Scrolling up, show the header
+                header.classList.remove('hidden');
+            }
+
+            lastScroll = currentScroll;
+        });
+    </script>
+
 </body>
 </html>
 
 <style>
+    /* General Styling */
+    body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+        color: #333;
+    }
+
     /* Header Styling */
     header {
         background: linear-gradient(90deg, #2e8b57, #3cb371); /* Light green gradient */
         padding: 15px 0;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+    }
+
+    header.hidden {
+        transform: translateY(-100%);
     }
 
     nav ul {
@@ -55,8 +100,8 @@
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        gap: 20px;
-        padding: 0 20px;
+        gap: 25px;
+        padding: 0 40px;
         margin: 0;
     }
 
@@ -64,11 +109,65 @@
         display: inline;
         color: white;
         font-size: 1rem;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    nav ul li:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
+    }
+
+    nav ul li a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+    nav ul li a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
     }
 
     nav ul li.logo {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         font-weight: bold;
         margin-right: auto; /* Push logo to the left */
+        letter-spacing: 1px;
+    }
+
+    .welcome-message {
+        font-weight: 400;
+        font-style: italic;
+    }
+
+    /* Main Content Styling */
+    main {
+        padding: 100px 40px 20px; /* Added padding to account for fixed header */
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        nav ul {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 10px 20px;
+        }
+
+        nav ul li.logo {
+            margin-bottom: 10px;
+        }
+
+        nav ul li {
+            font-size: 0.9rem;
+        }
+
+        main {
+            padding: 80px 20px 15px; /* Adjusted padding for mobile */
+        }
     }
 </style>

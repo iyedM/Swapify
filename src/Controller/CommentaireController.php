@@ -41,7 +41,7 @@ final class CommentaireController extends AbstractController
         $entityManager->persist($commentaire);
         $entityManager->flush();
     
-        return $this->redirectToRoute('app_blog_index', ['id' => $blogId]);
+        return $this->redirectToRoute('app_blog_show', ['id' => $blogId]);
     }
 
     #[Route('/{id}', name: 'app_commentaire_show', methods: ['GET'])]

@@ -245,7 +245,9 @@ public function rejectBlog(int $id, EntityManagerInterface $entityManager): Redi
 #[Route('/rate/{id}', name: 'app_blog_rate', methods: ['POST'])]
 public function rateBlog(Request $request, Blog $blog, EntityManagerInterface $entityManager): Response
 {
+    
     $rating = (int) $request->request->get('rating');
+    $this->denyAccessUnlessGranted('ROLE_USER');  // Basic check for regular users
 
     if ($rating < 0 || $rating > 5) {
         $this->addFlash('error', 'Invalid rating. Please select a value between 0 and 5.');
