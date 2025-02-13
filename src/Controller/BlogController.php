@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/blog')]
@@ -34,14 +35,30 @@ final class BlogController extends AbstractController
     #[Route('/all', name: 'app_blog_all', methods: ['GET'])]
     public function display(EntityManagerInterface $entityManager): Response
     {
-        $acceptedBlogs = $entityManager->getRepository(Blog::class)->findAll(
+        // Fetch the blogs sorted by their status (accepted, pending, rejected)
+        $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+            ['statut' => 'Acceptée'], // Filter for accepted blogs
+            ['id' => 'DESC'] // You can change this to the field you want to sort by
         );
         
+        $pendingBlogs = $entityManager->getRepository(Blog::class)->findBy(
+            ['statut' => 'enAttente'], // Filter for pending blogs
+            ['id' => 'DESC']
+        );
+        
+        $rejectedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+            ['statut' => 'Rejetée'], // Filter for rejected blogs
+            ['id' => 'DESC']
+        );
+    
+        // Combine the blogs into one array, maintaining the order: Accepted, Pending, Rejected
+        $allBlogs = array_merge($acceptedBlogs, $pendingBlogs, $rejectedBlogs);
     
         return $this->render('blog/all_blogs.html.twig', [
-            'blogs' => $acceptedBlogs,
+            'blogs' => $allBlogs,
         ]);
     }
+    
     
     #[Route('/new', name: 'app_blog_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
@@ -242,28 +259,36 @@ public function rateBlog(Request $request, Blog $blog, EntityManagerInterface $e
     return $this->redirectToRoute('app_blog_index');
 }
 
-#[Route('/my-blogs', name: 'app_blog_my_blogs', methods: ['GET'])]
-public function myBlogs(EntityManagerInterface $entityManager): Response
+
+#[Route('/my-blogs', name: 'app_user_blogs', methods: ['GET'])]
+public function displayUserBlogs(EntityManagerInterface $entityManager, UserInterface $user): Response
 {
-    $this->denyAccessUnlessGranted('ROLE_USER'); // Ensure the user is logged in
+    // Fetch the blogs of the currently logged-in user
 
-    $user = $this->getUser(); // Get the currently logged-in user
-
-    // Query for the blogs associated with the logged-in user, with any status
-    $blogs = $entityManager->getRepository(Blog::class)
-        ->createQueryBuilder('b')
-        ->where('b.user = :user') // Filter by the logged-in user
-        ->andWhere('b.statut IN (:statuts)') // Filter by multiple status types
-        ->setParameter('user', $user)
-        ->setParameter('statuts', [EtatEnum::Acceptée, EtatEnum::enAttente, EtatEnum::Rejetée])
-        ->getQuery()
-        ->getResult();
-
-    return $this->render('blog/myblogs.html.twig', [
-        'blogs' => $blogs, // Pass the filtered blogs to the Twig view
-    ]);
-}
-
+            // Fetch the blogs sorted by their status for the currently logged-in user
+            $acceptedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+                ['statut' => 'Acceptée', 'user' => $user], // Filter by accepted status and user
+                ['id' => 'DESC'] // Sort by the id in descending order
+            );
+            
+            $pendingBlogs = $entityManager->getRepository(Blog::class)->findBy(
+                ['statut' => 'enAttente', 'user' => $user], // Filter by pending status and user
+                ['id' => 'DESC']
+            );
+            
+            $rejectedBlogs = $entityManager->getRepository(Blog::class)->findBy(
+                ['statut' => 'Rejetée', 'user' => $user], // Filter by rejected status and user
+                ['id' => 'DESC']
+            );
+    
+            // Return the view and pass the sorted blogs to the template
+            return $this->render('blog/my_blogs.html.twig', [
+                'acceptedBlogs' => $acceptedBlogs,
+                'pendingBlogs' => $pendingBlogs,
+                'rejectedBlogs' => $rejectedBlogs,
+            ]);
+        }
+    
 // In BlogController.php
 #[Route('/stats', name: 'app_blog_stats', methods: ['GET'])]
 public function blogStats(EntityManagerInterface $entityManager): Response

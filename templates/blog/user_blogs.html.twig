@@ -1,0 +1,92 @@
+{% extends 'layout/header.html.twig' %}
+
+{% block title %}My Blogs{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">My Blogs</h1>
+
+        {# Flash messages #}
+        {% for label, messages in app.flashes %}
+            <div class="alert alert-{{ label }} text-center">
+                {% for message in messages %}
+                    <p class="mb-0">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        {# Display Accepted Blogs #}
+        <h3>Accepted Blogs</h3>
+        <div class="row">
+            {% for blog in acceptedBlogs %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-lg">
+                        {% if blog.image %}
+                            <img src="{{ asset('uploads/images/' ~ blog.image) }}" alt="{{ blog.Titre }}" class="img-fluid">
+                        {% else %}
+                            <img src="{{ asset('uploads/images/blog.jpg') }}" alt="{{ blog.Titre }}" class="img-fluid">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ blog.titre }}</h5>
+                            <p class="card-text text-muted">{{ blog.contenu|slice(0, 100) ~ '...' }}</p>
+                            <p><strong>Status:</strong> Accepted</p>
+                            <a href="{{ path('app_blog_show', {'id': blog.id}) }}" class="btn btn-primary btn-sm">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p>No accepted blogs found.</p>
+            {% endfor %}
+        </div>
+
+        {# Display Pending Blogs #}
+        <h3>Pending Blogs</h3>
+        <div class="row">
+            {% for blog in pendingBlogs %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-lg">
+                        {% if blog.image %}
+                            <img src="{{ asset('uploads/images/' ~ blog.image) }}" alt="{{ blog.Titre }}" class="img-fluid">
+                        {% else %}
+                            <img src="{{ asset('uploads/images/blog.jpg') }}" alt="{{ blog.Titre }}" class="img-fluid">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ blog.titre }}</h5>
+                            <p class="card-text text-muted">{{ blog.contenu|slice(0, 100) ~ '...' }}</p>
+                            <p><strong>Status:</strong> Pending</p>
+                            <a href="{{ path('app_blog_show', {'id': blog.id}) }}" class="btn btn-primary btn-sm">Read More</a>
+                            <a href="{{ path('accept_blog', {'id': blog.id}) }}" class="btn btn-success btn-sm">Accept</a>
+                            <a href="{{ path('reject_blog', {'id': blog.id}) }}" class="btn btn-danger btn-sm">Reject</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p>No pending blogs found.</p>
+            {% endfor %}
+        </div>
+
+        {# Display Rejected Blogs #}
+        <h3>Rejected Blogs</h3>
+        <div class="row">
+            {% for blog in rejectedBlogs %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-lg">
+                        {% if blog.image %}
+                            <img src="{{ asset('uploads/images/' ~ blog.image) }}" alt="{{ blog.Titre }}" class="img-fluid">
+                        {% else %}
+                            <img src="{{ asset('uploads/images/blog.jpg') }}" alt="{{ blog.Titre }}" class="img-fluid">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ blog.titre }}</h5>
+                            <p class="card-text text-muted">{{ blog.contenu|slice(0, 100) ~ '...' }}</p>
+                            <p><strong>Status:</strong> Rejected</p>
+                            <a href="{{ path('app_blog_show', {'id': blog.id}) }}" class="btn btn-primary btn-sm">Read More</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p>No rejected blogs found.</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
